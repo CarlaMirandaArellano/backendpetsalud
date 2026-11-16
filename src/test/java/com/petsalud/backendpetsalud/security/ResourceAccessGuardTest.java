@@ -63,12 +63,17 @@ class ResourceAccessGuardTest {
 
     @Test
     void clienteSoloPuedeAccederASuUsuario() {
+        // Arrange: el contexto de seguridad del cliente se configura en setUp.
+
+        // Act
+        // Assert
         assertDoesNotThrow(() -> accessGuard.requireUserAccess(10L));
         assertThrows(AccessDeniedException.class, () -> accessGuard.requireUserAccess(11L));
     }
 
     @Test
     void clienteSoloPuedeAccederASusMascotas() {
+        // Arrange
         Mascota propia = Mascota.builder()
                 .id(20L)
                 .propietario(Usuario.builder().id(10L).build())
@@ -80,6 +85,8 @@ class ResourceAccessGuardTest {
         when(mascotaRepository.findById(20L)).thenReturn(Optional.of(propia));
         when(mascotaRepository.findById(21L)).thenReturn(Optional.of(ajena));
 
+        // Act
+        // Assert
         assertDoesNotThrow(() -> accessGuard.requireMascotaAccess(20L));
         assertThrows(AccessDeniedException.class, () -> accessGuard.requireMascotaAccess(21L));
     }

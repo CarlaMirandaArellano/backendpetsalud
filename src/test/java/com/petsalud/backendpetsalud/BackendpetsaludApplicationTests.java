@@ -11,6 +11,9 @@ class BackendpetsaludApplicationTests {
 
 	@Test
 	void contextLoads() {
+		// Arrange: @SpringBootTest configura el contexto de la aplicacion.
+		// Act: Spring intenta iniciar el contexto antes de ejecutar este metodo.
+		// Assert: la prueba pasa si la inicializacion no lanza una excepcion.
 	}
 
 }

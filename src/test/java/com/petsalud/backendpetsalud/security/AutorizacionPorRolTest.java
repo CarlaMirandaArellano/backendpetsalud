@@ -84,86 +84,147 @@ class AutorizacionPorRolTest {
 
     @Test
     void sinTokenResponde401() throws Exception {
-        mockMvc.perform(get("/api/productos")).andExpect(status().isUnauthorized());
+        // Arrange
+        var solicitud = get("/api/productos");
+
+        // Act
+        var respuesta = mockMvc.perform(solicitud);
+
+        // Assert
+        respuesta.andExpect(status().isUnauthorized());
     }
 
     @Test
     void tokenInvalidoResponde401() throws Exception {
-        mockMvc.perform(get("/api/productos").header("Authorization", "Bearer token.invalido.123"))
-                .andExpect(status().isUnauthorized());
+        // Arrange
+        var solicitud = get("/api/productos").header("Authorization", "Bearer token.invalido.123");
+
+        // Act
+        var respuesta = mockMvc.perform(solicitud);
+
+        // Assert
+        respuesta.andExpect(status().isUnauthorized());
     }
 
     @Test
     void clientePuedeConsultarCatalogo() throws Exception {
-        mockMvc.perform(get("/api/productos").header("Authorization", bearer("cliente@petsalud.cl")))
-                .andExpect(status().isOk());
+        // Arrange
+        var solicitud = get("/api/productos")
+                .header("Authorization", bearer("cliente@petsalud.cl"));
+
+        // Act
+        var respuesta = mockMvc.perform(solicitud);
+
+        // Assert
+        respuesta.andExpect(status().isOk());
     }
 
     @Test
     void clienteNoPuedeCrearProductos() throws Exception {
-        mockMvc.perform(post("/api/productos")
+        // Arrange
+        var solicitud = post("/api/productos")
                         .header("Authorization", bearer("cliente@petsalud.cl"))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(PRODUCTO_JSON))
-                .andExpect(status().isForbidden());
+                        .content(PRODUCTO_JSON);
+
+        // Act
+        var respuesta = mockMvc.perform(solicitud);
+
+        // Assert
+        respuesta.andExpect(status().isForbidden());
     }
 
     @Test
     void empleadoNoPuedeCrearProductos() throws Exception {
-        mockMvc.perform(post("/api/productos")
+        // Arrange
+        var solicitud = post("/api/productos")
                         .header("Authorization", bearer("empleado@petsalud.cl"))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(PRODUCTO_JSON))
-                .andExpect(status().isForbidden());
+                        .content(PRODUCTO_JSON);
+
+        // Act
+        var respuesta = mockMvc.perform(solicitud);
+
+        // Assert
+        respuesta.andExpect(status().isForbidden());
     }
 
     @Test
     void gerentePuedeCrearProductos() throws Exception {
-        mockMvc.perform(post("/api/productos")
+        // Arrange
+        var solicitud = post("/api/productos")
                         .header("Authorization", bearer("gerente@petsalud.cl"))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(PRODUCTO_JSON))
-                .andExpect(status().isOk());
+                        .content(PRODUCTO_JSON);
+
+        // Act
+        var respuesta = mockMvc.perform(solicitud);
+
+        // Assert
+        respuesta.andExpect(status().isOk());
     }
 
     @Test
     void stockBajoSoloParaEmpleadoYGerente() throws Exception {
-        mockMvc.perform(get("/api/productos/stock-bajo").param("cantidad", "5")
-                        .header("Authorization", bearer("cliente@petsalud.cl")))
-                .andExpect(status().isForbidden());
-        mockMvc.perform(get("/api/productos/stock-bajo").param("cantidad", "5")
-                        .header("Authorization", bearer("empleado@petsalud.cl")))
-                .andExpect(status().isOk());
+        // Arrange
+        var solicitudCliente = get("/api/productos/stock-bajo").param("cantidad", "5")
+                .header("Authorization", bearer("cliente@petsalud.cl"));
+        var solicitudEmpleado = get("/api/productos/stock-bajo").param("cantidad", "5")
+                .header("Authorization", bearer("empleado@petsalud.cl"));
+
+        // Act
+        var respuestaCliente = mockMvc.perform(solicitudCliente);
+        var respuestaEmpleado = mockMvc.perform(solicitudEmpleado);
+
+        // Assert
+        respuestaCliente.andExpect(status().isForbidden());
+        respuestaEmpleado.andExpect(status().isOk());
     }
 
     @Test
     void gerentePuedeGenerarVentas() throws Exception {
-        mockMvc.perform(post("/api/ventas").param("usuarioId", "7")
+        // Arrange
+        var solicitud = post("/api/ventas").param("usuarioId", "7")
                         .header("Authorization", bearer("gerente@petsalud.cl"))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("[1]"))
-                .andExpect(status().isOk());
+                        .content("[1]");
 
+        // Act
+        var respuesta = mockMvc.perform(solicitud);
+
+        // Assert
+        respuesta.andExpect(status().isOk());
         verify(ventaService).realizarVenta(7L, List.of(1L));
     }
 
     @Test
     void empleadoPuedeGenerarVentas() throws Exception {
-        mockMvc.perform(post("/api/ventas").param("usuarioId", "7")
+        // Arrange
+        var solicitud = post("/api/ventas").param("usuarioId", "7")
                         .header("Authorization", bearer("empleado@petsalud.cl"))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("[1]"))
-                .andExpect(status().isOk());
+                        .content("[1]");
 
+        // Act
+        var respuesta = mockMvc.perform(solicitud);
+
+        // Assert
+        respuesta.andExpect(status().isOk());
         verify(ventaService).realizarVenta(7L, List.of(1L));
     }
 
     @Test
     void clienteNoPuedeGenerarVentas() throws Exception {
-        mockMvc.perform(post("/api/ventas").param("usuarioId", "7")
+        // Arrange
+        var solicitud = post("/api/ventas").param("usuarioId", "7")
                         .header("Authorization", bearer("cliente@petsalud.cl"))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("[1]"))
-                .andExpect(status().isForbidden());
+                        .content("[1]");
+
+        // Act
+        var respuesta = mockMvc.perform(solicitud);
+
+        // Assert
+        respuesta.andExpect(status().isForbidden());
     }
 }

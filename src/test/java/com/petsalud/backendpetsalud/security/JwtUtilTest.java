@@ -30,9 +30,14 @@ class JwtUtilTest {
 
     @Test
     void generaTokenConClaimsEsperadasYSinPassword() {
-        String token = jwtUtil.generarToken(usuario("ana@petsalud.cl", Rol.CLIENTE));
+        // Arrange
+        UsuarioDetails usuario = usuario("ana@petsalud.cl", Rol.CLIENTE);
 
+        // Act
+        String token = jwtUtil.generarToken(usuario);
         Claims claims = jwtUtil.validarYObtenerClaims(token);
+
+        // Assert
         assertEquals("ana@petsalud.cl", claims.getSubject());
         assertEquals("CLIENTE", claims.get(JwtUtil.CLAIM_ROL));
         assertEquals("petsalud-backend", claims.getIssuer());
@@ -43,14 +48,21 @@ class JwtUtilTest {
 
     @Test
     void tokenEsValidoSoloParaSuUsuario() {
-        String token = jwtUtil.generarToken(usuario("ana@petsalud.cl", Rol.CLIENTE));
+        // Arrange
+        UsuarioDetails ana = usuario("ana@petsalud.cl", Rol.CLIENTE);
+        UsuarioDetails otroUsuario = usuario("otro@petsalud.cl", Rol.CLIENTE);
 
-        assertTrue(jwtUtil.esTokenValido(token, usuario("ana@petsalud.cl", Rol.CLIENTE)));
-        assertFalse(jwtUtil.esTokenValido(token, usuario("otro@petsalud.cl", Rol.CLIENTE)));
+        // Act
+        String token = jwtUtil.generarToken(ana);
+
+        // Assert
+        assertTrue(jwtUtil.esTokenValido(token, ana));
+        assertFalse(jwtUtil.esTokenValido(token, otroUsuario));
     }
 
     @Test
     void rechazaTokenAlterado() {
+        // Arrange
         String token = jwtUtil.generarToken(usuario("ana@petsalud.cl", Rol.CLIENTE));
         String[] partes = token.split("\\.");
         // Se reemplaza el payload por uno que dice ser GERENTE, manteniendo la firma original
@@ -58,38 +70,52 @@ class JwtUtilTest {
                 "{\"sub\":\"ana@petsalud.cl\",\"rol\":\"GERENTE\",\"iss\":\"petsalud-backend\"}".getBytes());
         String tokenAlterado = partes[0] + "." + payloadFalso + "." + partes[2];
 
+        // Act
+        // Assert: validar claims debe rechazar el payload cuya firma ya no coincide.
         assertThrows(JwtException.class, () -> jwtUtil.validarYObtenerClaims(tokenAlterado));
     }
 
     @Test
     void rechazaTokenFirmadoConOtraClave() {
+        // Arrange
         JwtUtil otroEmisor = new JwtUtil(OTRO_SECRET, 60_000, "petsalud-backend");
         String token = otroEmisor.generarToken(usuario("ana@petsalud.cl", Rol.GERENTE));
 
+        // Act
+        // Assert: la validacion debe fallar al usar una clave distinta.
         assertThrows(JwtException.class, () -> jwtUtil.validarYObtenerClaims(token));
     }
 
     @Test
     void rechazaTokenExpirado() {
+        // Arrange
         JwtUtil expiraAlInstante = new JwtUtil(SECRET, -1_000, "petsalud-backend");
         String token = expiraAlInstante.generarToken(usuario("ana@petsalud.cl", Rol.CLIENTE));
 
+        // Act
+        // Assert: validar el token expirado debe lanzar una excepcion.
         assertThrows(JwtException.class, () -> jwtUtil.validarYObtenerClaims(token));
     }
 
     @Test
     void rechazaTokenSinFirma() {
+        // Arrange
         String header = Base64.getUrlEncoder().withoutPadding().encodeToString("{\"alg\":\"none\"}".getBytes());
         String payload = Base64.getUrlEncoder().withoutPadding().encodeToString(
                 "{\"sub\":\"ana@petsalud.cl\",\"iss\":\"petsalud-backend\"}".getBytes());
 
+        // Act
+        // Assert: el formato sin firma no debe aceptarse como un JWT valido.
         assertThrows(JwtException.class, () -> jwtUtil.validarYObtenerClaims(header + "." + payload + "."));
     }
 
     @Test
     void exigeClaveSecretaDeAlMenos256Bits() {
+        // Arrange
         String claveCorta = Base64.getEncoder().encodeToString("corta".getBytes());
 
+        // Act
+        // Assert: las claves debiles o vacias deben ser rechazadas.
         assertThrows(WeakKeyException.class, () -> new JwtUtil(claveCorta, 60_000, "petsalud-backend"));
         assertThrows(IllegalStateException.class, () -> new JwtUtil("", 60_000, "petsalud-backend"));
     }

@@ -43,6 +43,7 @@ class UsuarioServiceImplTest {
 
     @Test
     void registraConPasswordCodificadaYRolClienteAunqueSeSoliciteOtroRol() {
+        // Arrange
         when(usuarioRepository.findByEmail("cliente@petsalud.cl")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("una-clave-segura")).thenReturn("hash-seguro");
         when(usuarioRepository.save(any(Usuario.class)))
@@ -52,8 +53,10 @@ class UsuarioServiceImplTest {
         usuario.setPassword("una-clave-segura");
         usuario.setRol(Rol.GERENTE);
 
+        // Act
         Usuario registrado = usuarioService.registrarUsuario(usuario);
 
+        // Assert
         assertEquals("hash-seguro", registrado.getPassword());
         assertNotEquals("una-clave-segura", registrado.getPassword());
         assertEquals(Rol.CLIENTE, registrado.getRol());
@@ -63,71 +66,106 @@ class UsuarioServiceImplTest {
 
     @Test
     void rechazaUsuarioSinNombreAntesDeConsultarRepositorio() {
+        // Arrange
         Usuario usuario = usuarioCompleto();
         usuario.setNombre(" ");
 
-        assertThrows(IllegalArgumentException.class, () -> usuarioService.registrarUsuario(usuario));
+        // Act
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class, () -> usuarioService.registrarUsuario(usuario));
 
+        // Assert
+        assertEquals("Nombre, apellido, email y dirección son obligatorios", error.getMessage());
         verifyNoInteractions(usuarioRepository, passwordEncoder);
     }
 
     @Test
     void rechazaUsuarioSinApellidoAntesDeConsultarRepositorio() {
+        // Arrange
         Usuario usuario = usuarioCompleto();
         usuario.setApellido(null);
 
-        assertThrows(IllegalArgumentException.class, () -> usuarioService.registrarUsuario(usuario));
+        // Act
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class, () -> usuarioService.registrarUsuario(usuario));
 
+        // Assert
+        assertEquals("Nombre, apellido, email y dirección son obligatorios", error.getMessage());
         verifyNoInteractions(usuarioRepository, passwordEncoder);
     }
 
     @Test
     void rechazaUsuarioSinEmailAntesDeConsultarRepositorio() {
+        // Arrange
         Usuario usuario = usuarioCompleto();
         usuario.setEmail("");
 
-        assertThrows(IllegalArgumentException.class, () -> usuarioService.registrarUsuario(usuario));
+        // Act
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class, () -> usuarioService.registrarUsuario(usuario));
 
+        // Assert
+        assertEquals("Nombre, apellido, email y dirección son obligatorios", error.getMessage());
         verifyNoInteractions(usuarioRepository, passwordEncoder);
     }
 
     @Test
     void rechazaUsuarioSinDireccionAntesDeConsultarRepositorio() {
+        // Arrange
         Usuario usuario = usuarioCompleto();
         usuario.setDireccion(" ");
 
-        assertThrows(IllegalArgumentException.class, () -> usuarioService.registrarUsuario(usuario));
+        // Act
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class, () -> usuarioService.registrarUsuario(usuario));
 
+        // Assert
+        assertEquals("Nombre, apellido, email y dirección son obligatorios", error.getMessage());
         verifyNoInteractions(usuarioRepository, passwordEncoder);
     }
 
     @Test
     void rechazaEmailConFormatoInvalido() {
+        // Arrange
         Usuario usuario = usuarioCompleto();
         usuario.setEmail("correo-invalido");
 
-        assertThrows(IllegalArgumentException.class, () -> usuarioService.registrarUsuario(usuario));
+        // Act
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class, () -> usuarioService.registrarUsuario(usuario));
 
+        // Assert
+        assertEquals("Debe indicar un correo válido", error.getMessage());
         verifyNoInteractions(usuarioRepository, passwordEncoder);
     }
 
     @Test
     void rechazaPasswordMenorAlMinimo() {
+        // Arrange
         Usuario usuario = usuarioCompleto();
         usuario.setPassword("corta");
 
-        assertThrows(IllegalArgumentException.class, () -> usuarioService.registrarUsuario(usuario));
+        // Act
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class, () -> usuarioService.registrarUsuario(usuario));
 
+        // Assert
+        assertEquals("La contraseña debe tener al menos 8 caracteres", error.getMessage());
         verifyNoInteractions(usuarioRepository, passwordEncoder);
     }
 
     @Test
     void rechazaRegistroConEmailExistente() {
+        // Arrange
         Usuario usuario = usuarioCompleto();
         when(usuarioRepository.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
 
-        assertThrows(IllegalArgumentException.class, () -> usuarioService.registrarUsuario(usuario));
+        // Act
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class, () -> usuarioService.registrarUsuario(usuario));
 
+        // Assert
+        assertEquals("El email ya está registrado", error.getMessage());
         verify(usuarioRepository).findByEmail(usuario.getEmail());
         verify(usuarioRepository, never()).save(any(Usuario.class));
         verifyNoInteractions(passwordEncoder);
@@ -135,22 +173,33 @@ class UsuarioServiceImplTest {
 
     @Test
     void obtieneUsuarioPorId() {
+        // Arrange
         Usuario usuario = usuarioCompleto();
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
 
-        assertSame(usuario, usuarioService.obtenerUsuarioPorId(1L).orElseThrow());
+        // Act
+        Optional<Usuario> resultado = usuarioService.obtenerUsuarioPorId(1L);
+
+        // Assert
+        assertSame(usuario, resultado.orElseThrow());
     }
 
     @Test
     void obtieneUsuarioPorEmail() {
+        // Arrange
         Usuario usuario = usuarioCompleto();
         when(usuarioRepository.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
 
-        assertSame(usuario, usuarioService.obtenerUsuarioPorEmail(usuario.getEmail()).orElseThrow());
+        // Act
+        Optional<Usuario> resultado = usuarioService.obtenerUsuarioPorEmail(usuario.getEmail());
+
+        // Assert
+        assertSame(usuario, resultado.orElseThrow());
     }
 
     @Test
     void actualizaDatosPersonalesSinCambiarEmailNiPassword() {
+        // Arrange
         Usuario existente = usuarioCompleto();
         Usuario cambios = Usuario.builder()
                 .nombre("María")
@@ -163,8 +212,10 @@ class UsuarioServiceImplTest {
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(existente));
         when(usuarioRepository.save(existente)).thenReturn(existente);
 
+        // Act
         Usuario actualizado = usuarioService.actualizarUsuario(1L, cambios);
 
+        // Assert
         assertEquals("María", actualizado.getNombre());
         assertEquals("López", actualizado.getApellido());
         assertEquals("222", actualizado.getTelefono());
@@ -176,69 +227,106 @@ class UsuarioServiceImplTest {
 
     @Test
     void actualizarUsuarioInexistenteFalla() {
+        // Arrange
         when(usuarioRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class,
+        // Act
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
                 () -> usuarioService.actualizarUsuario(1L, usuarioCompleto()));
 
+        // Assert
+        assertEquals("Usuario no encontrado", error.getMessage());
         verify(usuarioRepository, never()).save(any(Usuario.class));
     }
 
     @Test
     void eliminaUsuarioPorId() {
-        usuarioService.eliminarUsuario(1L);
+        // Arrange
+        Long usuarioId = 1L;
 
-        verify(usuarioRepository).deleteById(1L);
+        // Act
+        usuarioService.eliminarUsuario(usuarioId);
+
+        // Assert
+        verify(usuarioRepository).deleteById(usuarioId);
     }
 
     @Test
     void listaUsuariosDesdeRepositorio() {
+        // Arrange
         List<Usuario> usuarios = List.of(usuarioCompleto());
         when(usuarioRepository.findAll()).thenReturn(usuarios);
 
-        assertSame(usuarios, usuarioService.listarUsuarios());
+        // Act
+        List<Usuario> resultado = usuarioService.listarUsuarios();
+
+        // Assert
+        assertSame(usuarios, resultado);
     }
 
     @Test
     void cambiaRolDelUsuario() {
+        // Arrange
         Usuario usuario = usuarioCompleto();
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
         when(usuarioRepository.save(usuario)).thenReturn(usuario);
 
+        // Act
         Usuario actualizado = usuarioService.cambiarRol(1L, Rol.GERENTE);
 
+        // Assert
         assertEquals(Rol.GERENTE, actualizado.getRol());
         verify(usuarioRepository).save(usuario);
     }
 
     @Test
     void rechazaCambioDeRolNuloSinConsultarRepositorio() {
-        assertThrows(IllegalArgumentException.class, () -> usuarioService.cambiarRol(1L, null));
+        // Arrange
+        Long usuarioId = 1L;
 
+        // Act
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class, () -> usuarioService.cambiarRol(usuarioId, null));
+
+        // Assert
+        assertEquals("Debe indicar un rol: CLIENTE, EMPLEADO o GERENTE", error.getMessage());
         verifyNoInteractions(usuarioRepository);
     }
 
     @Test
     void cambiarRolDeUsuarioInexistenteFalla() {
+        // Arrange
         when(usuarioRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class,
-                () -> usuarioService.cambiarRol(1L, Rol.GERENTE));
+        // Act
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class, () -> usuarioService.cambiarRol(1L, Rol.GERENTE));
 
+        // Assert
+        assertEquals("Usuario no encontrado", error.getMessage());
         verify(usuarioRepository, never()).save(any(Usuario.class));
     }
 
     @Test
     void usuarioIndicaSiTieneTodosLosDatosObligatorios() {
-        assertTrue(usuarioCompleto().tieneDatosObligatoriosCompletos());
-
+        // Arrange
+        Usuario completo = usuarioCompleto();
         Usuario incompleto = usuarioCompleto();
         incompleto.setDireccion(null);
-        assertFalse(incompleto.tieneDatosObligatoriosCompletos());
+
+        // Act
+        boolean completoTieneDatos = completo.tieneDatosObligatoriosCompletos();
+        boolean incompletoTieneDatos = incompleto.tieneDatosObligatoriosCompletos();
+
+        // Assert
+        assertTrue(completoTieneDatos);
+        assertFalse(incompletoTieneDatos);
     }
 
     @Test
     void respuestaDeUsuarioNoIncluyeLaPassword() throws Exception {
+        // Arrange
         UsuarioResponse response = new UsuarioResponse(
                 1L,
                 "cliente@petsalud.cl",
@@ -249,14 +337,17 @@ class UsuarioServiceImplTest {
                 Rol.CLIENTE
         );
 
+        // Act
         String json = new ObjectMapper().writeValueAsString(response);
 
+        // Assert
         assertTrue(json.contains("\"email\":\"cliente@petsalud.cl\""));
         assertFalse(json.contains("password"));
     }
 
     @Test
     void authoritiesDeUsuarioCoincidenConSusRoles() {
+        // Arrange
         for (Rol rol : Rol.values()) {
             Usuario usuario = Usuario.builder()
                     .email("usuario@petsalud.cl")
@@ -264,10 +355,12 @@ class UsuarioServiceImplTest {
                     .rol(rol)
                     .build();
 
+            // Act
             Set<String> authorities = new UsuarioDetails(usuario).getAuthorities().stream()
                     .map(authority -> authority.getAuthority())
                     .collect(java.util.stream.Collectors.toSet());
 
+            // Assert
             assertEquals(Set.of("ROLE_" + rol.name()), authorities);
         }
     }
