@@ -20,7 +20,7 @@ public class VentaController {
     private ResourceAccessGuard accessGuard;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('CLIENTE', 'EMPLEADO', 'GERENTE')")
+    @PreAuthorize("hasAnyRole('EMPLEADO', 'GERENTE')")
     public ResponseEntity<Venta> realizarVenta(
             @RequestParam Long usuarioId,
             @RequestBody List<Long> productosIds) {

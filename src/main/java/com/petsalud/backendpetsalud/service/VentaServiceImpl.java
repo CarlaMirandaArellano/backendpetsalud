@@ -6,9 +6,9 @@ import com.petsalud.backendpetsalud.entity.Venta;
 import com.petsalud.backendpetsalud.repository.ProductoRepository;
 import com.petsalud.backendpetsalud.repository.UsuarioRepository;
 import com.petsalud.backendpetsalud.repository.VentaRepository;
-import com.petsalud.backendpetsalud.service.VentaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -28,9 +28,14 @@ public class VentaServiceImpl implements VentaService {
     private ProductoRepository productoRepository;
 
     @Override
+    @Transactional
     public Venta realizarVenta(Long usuarioId, List<Long> productosIds) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        if (!usuario.tieneDatosObligatoriosCompletos()) {
+            throw new IllegalArgumentException("El usuario asociado a la venta tiene datos incompletos");
+        }
 
         List<Producto> productos = productoRepository.findAllById(productosIds);
 
@@ -38,12 +43,14 @@ public class VentaServiceImpl implements VentaService {
             throw new IllegalArgumentException("Algunos productos no fueron encontrados");
         }
 
-        BigDecimal total = BigDecimal.ZERO;
         for (Producto producto : productos) {
-            if (producto.getStock() <= 0) {
+            if (producto.getStock() == null || producto.getStock() <= 0) {
                 throw new IllegalArgumentException("El producto " + producto.getNombre() + " no tiene stock disponible");
             }
-            // Restar stock
+        }
+
+        BigDecimal total = BigDecimal.ZERO;
+        for (Producto producto : productos) {
             producto.setStock(producto.getStock() - 1);
             productoRepository.save(producto);
 

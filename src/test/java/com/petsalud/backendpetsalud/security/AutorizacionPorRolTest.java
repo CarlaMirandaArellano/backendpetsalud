@@ -1,10 +1,13 @@
 package com.petsalud.backendpetsalud.security;
 
 import com.petsalud.backendpetsalud.controller.ProductoController;
+import com.petsalud.backendpetsalud.controller.VentaController;
 import com.petsalud.backendpetsalud.entity.Producto;
 import com.petsalud.backendpetsalud.entity.Rol;
 import com.petsalud.backendpetsalud.entity.Usuario;
+import com.petsalud.backendpetsalud.entity.Venta;
 import com.petsalud.backendpetsalud.service.ProductoService;
+import com.petsalud.backendpetsalud.service.VentaService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -27,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Pruebas de acceso de punta a punta sobre la cadena de seguridad:
  * token JWT -> filtro -> reglas de SecurityConfig y @PreAuthorize -> 200 / 401 / 403.
  */
-@WebMvcTest(ProductoController.class)
+@WebMvcTest({ProductoController.class, VentaController.class})
 @Import({SecurityConfig.class, JwtUtil.class, JwtAuthenticationFilter.class,
         JsonAuthenticationEntryPoint.class, JsonAccessDeniedHandler.class})
 @TestPropertySource(properties = {
@@ -48,6 +52,12 @@ class AutorizacionPorRolTest {
     @MockBean
     private ProductoService productoService;
 
+    @MockBean
+    private VentaService ventaService;
+
+    @MockBean
+    private ResourceAccessGuard accessGuard;
+
     private static final String PRODUCTO_JSON =
             "{\"nombre\":\"Alimento\",\"precio\":1000,\"stock\":5,\"categoria\":\"Alimentos\"}";
 
@@ -59,6 +69,8 @@ class AutorizacionPorRolTest {
         when(productoService.listarProductos()).thenReturn(List.of());
         when(productoService.listarProductosConStockBajo(any())).thenReturn(List.of());
         when(productoService.agregarProducto(any())).thenReturn(Producto.builder().id(1L).nombre("Alimento").build());
+        when(ventaService.realizarVenta(7L, List.of(1L)))
+                .thenReturn(Venta.builder().id(1L).build());
     }
 
     private void registrar(String email, Rol rol) {
@@ -122,5 +134,36 @@ class AutorizacionPorRolTest {
         mockMvc.perform(get("/api/productos/stock-bajo").param("cantidad", "5")
                         .header("Authorization", bearer("empleado@petsalud.cl")))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void gerentePuedeGenerarVentas() throws Exception {
+        mockMvc.perform(post("/api/ventas").param("usuarioId", "7")
+                        .header("Authorization", bearer("gerente@petsalud.cl"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("[1]"))
+                .andExpect(status().isOk());
+
+        verify(ventaService).realizarVenta(7L, List.of(1L));
+    }
+
+    @Test
+    void empleadoPuedeGenerarVentas() throws Exception {
+        mockMvc.perform(post("/api/ventas").param("usuarioId", "7")
+                        .header("Authorization", bearer("empleado@petsalud.cl"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("[1]"))
+                .andExpect(status().isOk());
+
+        verify(ventaService).realizarVenta(7L, List.of(1L));
+    }
+
+    @Test
+    void clienteNoPuedeGenerarVentas() throws Exception {
+        mockMvc.perform(post("/api/ventas").param("usuarioId", "7")
+                        .header("Authorization", bearer("cliente@petsalud.cl"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("[1]"))
+                .andExpect(status().isForbidden());
     }
 }

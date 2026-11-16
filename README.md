@@ -42,13 +42,13 @@ Todas las demás rutas `/api/**` exigen el encabezado `Authorization: Bearer <to
 | Mascotas / Citas | Completo | Toda la clínica | Solo las suyas |
 | Expedientes médicos | Completo | Crear, ver, eliminar | Sin acceso |
 | Productos | Completo | Consulta y stock bajo | Consulta |
-| Ventas | Completo | Consultar y registrar | Solo las suyas |
+| Ventas | Completo | Consultar y registrar | Consultar solo las suyas; sin registrar |
 | Notificaciones / Recompensas | Completo | Sin acceso | Solo las suyas |
 
 Para dar el rol EMPLEADO o GERENTE: `PUT /api/usuarios/{id}/rol` con `{"rol":"EMPLEADO"}` (solo GERENTE).
 
 ## Pruebas rápidas en Postman
-1. `POST /api/auth/registro` con `{"email":"ana@petsalud.cl","password":"Clave1234","nombre":"Ana"}` → 201
+1. `POST /api/auth/registro` con `{"email":"ana@petsalud.cl","password":"Clave1234","nombre":"Ana","apellido":"Pérez","direccion":"Calle 123"}` → 201
 2. `POST /api/auth/login` con `{"email":"ana@petsalud.cl","password":"Clave1234"}` → 200 y token
 3. `GET /api/productos` sin token → **401**
 4. `GET /api/productos` con `Authorization: Bearer <token>` → **200**
@@ -59,11 +59,13 @@ También se incluye la colección `PetSalud-JWT.postman_collection.json`: el log
 
 ## Pruebas automatizadas
 ```bash
-./mvnw test
+./mvnw clean verify
+# En Windows: .\mvnw.cmd clean verify
 ```
 - `JwtUtilTest`: claims, token alterado, otra clave, token expirado, `alg: none` y clave débil.
-- `AutorizacionPorRolTest`: 401 sin token, 403 por rol y 200 con el rol correcto.
-- `ResourceAccessGuardTest` y `UsuarioServiceImplTest`: titularidad de recursos y BCrypt.
+- `AutorizacionPorRolTest`: acceso a productos y generación de ventas por rol.
+- `UsuarioServiceImplTest` y `VentaServiceImplTest`: validaciones, cálculos, stock y relaciones entre usuario, venta y productos.
+- JUnit 5 y Mockito vienen incluidos con `spring-boot-starter-test`. JaCoCo genera el reporte en `target/site/jacoco/` y exige al menos 80% de cobertura de líneas en `UsuarioServiceImpl` y `VentaServiceImpl`.
 
 ## Migración desde la versión anterior
 Los roles cambiaron de nombre. Si la base ya tiene usuarios:

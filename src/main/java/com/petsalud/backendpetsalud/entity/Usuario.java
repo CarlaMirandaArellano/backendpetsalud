@@ -40,6 +40,17 @@ public class Usuario {
     @Column(nullable = false)
     private Rol rol;
 
+    public boolean tieneDatosObligatoriosCompletos() {
+        return tieneTexto(nombre)
+                && tieneTexto(apellido)
+                && tieneTexto(email)
+                && tieneTexto(direccion);
+    }
+
+    private static boolean tieneTexto(String valor) {
+        return valor != null && !valor.isBlank();
+    }
+
     // Relaciones
     @OneToMany(mappedBy = "propietario", cascade = CascadeType.ALL)
     private List<Mascota> mascotas;

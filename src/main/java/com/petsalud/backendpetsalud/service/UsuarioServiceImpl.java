@@ -24,7 +24,10 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     public Usuario registrarUsuario(Usuario usuario) {
-        if (usuario.getEmail() == null || usuario.getEmail().isBlank() || !usuario.getEmail().contains("@")) {
+        if (!usuario.tieneDatosObligatoriosCompletos()) {
+            throw new IllegalArgumentException("Nombre, apellido, email y dirección son obligatorios");
+        }
+        if (!usuario.getEmail().contains("@")) {
             throw new IllegalArgumentException("Debe indicar un correo válido");
         }
         if (usuario.getPassword() == null || usuario.getPassword().length() < MIN_PASSWORD_LENGTH) {
