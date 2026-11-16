@@ -42,6 +42,7 @@ Todas las demás rutas `/api/**` exigen el encabezado `Authorization: Bearer <to
 | Mascotas / Citas | Completo | Toda la clínica | Solo las suyas |
 | Expedientes médicos | Completo | Crear, ver, eliminar | Sin acceso |
 | Productos | Completo | Consulta y stock bajo | Consulta |
+| Proveedores | Completo | Consulta | Sin acceso |
 | Ventas | Completo | Consultar y registrar | Consultar solo las suyas; sin registrar |
 | Notificaciones / Recompensas | Completo | Sin acceso | Solo las suyas |
 
@@ -65,7 +66,8 @@ También se incluye la colección `PetSalud-JWT.postman_collection.json`: el log
 - `JwtUtilTest`: claims, token alterado, otra clave, token expirado, `alg: none` y clave débil.
 - `AutorizacionPorRolTest`: acceso a productos y generación de ventas por rol.
 - `UsuarioServiceImplTest` y `VentaServiceImplTest`: validaciones, cálculos, stock y relaciones entre usuario, venta y productos.
-- JUnit 5 y Mockito vienen incluidos con `spring-boot-starter-test`. JaCoCo genera el reporte en `target/site/jacoco/` y exige al menos 80% de cobertura de líneas en `UsuarioServiceImpl` y `VentaServiceImpl`.
+- `ProveedorServiceImplTest`: datos obligatorios del proveedor, RUT duplicado, relación Producto–Proveedor y regla que impide eliminar un proveedor con productos.
+- JUnit 5 y Mockito vienen incluidos con `spring-boot-starter-test`. JaCoCo genera el reporte en `target/site/jacoco/` y exige al menos 80% de cobertura de líneas en `UsuarioServiceImpl`, `VentaServiceImpl` y `ProveedorServiceImpl`.
 
 ## Migración desde la versión anterior
 Los roles cambiaron de nombre. Si la base ya tiene usuarios:

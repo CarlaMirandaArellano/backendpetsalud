@@ -134,6 +134,7 @@
 									<includes>
 										<include>com.petsalud.backendpetsalud.service.UsuarioServiceImpl</include>
 										<include>com.petsalud.backendpetsalud.service.VentaServiceImpl</include>
+										<include>com.petsalud.backendpetsalud.service.ProveedorServiceImpl</include>
 									</includes>
 									<limits>
 										<limit>

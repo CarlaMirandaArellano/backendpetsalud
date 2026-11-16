@@ -30,5 +30,10 @@ public class Producto {
     private Integer stock;
 
     private String categoria;
+
+    // Relación: muchos productos pueden pertenecer a un mismo proveedor (opcional)
+    @ManyToOne
+    @JoinColumn(name = "proveedor_id")
+    private Proveedor proveedor;
 }
 
