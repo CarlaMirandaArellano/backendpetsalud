@@ -67,7 +67,9 @@ También se incluye la colección `PetSalud-JWT.postman_collection.json`: el log
 - `AutorizacionPorRolTest`: acceso a productos y generación de ventas por rol.
 - `UsuarioServiceImplTest` y `VentaServiceImplTest`: validaciones, cálculos, stock y relaciones entre usuario, venta y productos.
 - `ProveedorServiceImplTest`: datos obligatorios del proveedor, RUT duplicado, relación Producto–Proveedor y regla que impide eliminar un proveedor con productos.
-- JUnit 5 y Mockito vienen incluidos con `spring-boot-starter-test`. JaCoCo genera el reporte en `target/site/jacoco/` y exige al menos 80% de cobertura de líneas en `UsuarioServiceImpl`, `VentaServiceImpl` y `ProveedorServiceImpl`.
+- `CitaServiceImplTest` (semana 5): cita agendada con estado inicial "Agendada", rechazo de horario ocupado, veterinario correcto (rol EMPLEADO) y mascota con propietario registrado.
+- `MascotaServiceImplTest`, `UsuarioTest` y `CitaTest` (semana 5): datos obligatorios del usuario, roles válidos, relación CLIENTE–mascotas y relaciones de la cita.
+- JUnit 5 y Mockito vienen incluidos con `spring-boot-starter-test`. JaCoCo genera el reporte en `target/site/jacoco/` y exige al menos 80% de cobertura de líneas en `UsuarioServiceImpl`, `VentaServiceImpl`, `ProveedorServiceImpl`, `CitaServiceImpl` y `MascotaServiceImpl`.
 
 ## Migración desde la versión anterior
 Los roles cambiaron de nombre. Si la base ya tiene usuarios:

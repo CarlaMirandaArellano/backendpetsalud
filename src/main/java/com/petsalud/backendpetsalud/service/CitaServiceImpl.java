@@ -38,7 +38,13 @@ public class CitaServiceImpl implements CitaService {
             throw new IllegalArgumentException("El usuario seleccionado no corresponde a personal de la clínica (rol EMPLEADO)");
         }
 
-        // Opcional: Verificar disponibilidad del veterinario en ese horario
+        // Verificar disponibilidad del veterinario en ese horario (las citas canceladas liberan el horario)
+        boolean horarioOcupado = citaRepository.findByVeterinarioId(veterinarioId).stream()
+                .anyMatch(c -> fechaHora.equals(c.getFechaHora())
+                        && !"Cancelada".equalsIgnoreCase(c.getEstado()));
+        if (horarioOcupado) {
+            throw new IllegalArgumentException("El veterinario ya tiene una cita agendada en ese horario");
+        }
 
         Cita cita = Cita.builder()
                 .mascota(mascota)

@@ -135,6 +135,9 @@
 										<include>com.petsalud.backendpetsalud.service.UsuarioServiceImpl</include>
 										<include>com.petsalud.backendpetsalud.service.VentaServiceImpl</include>
 										<include>com.petsalud.backendpetsalud.service.ProveedorServiceImpl</include>
+										<!-- Semana 5: funcionalidades de Cita y relacion Usuario-Mascota -->
+										<include>com.petsalud.backendpetsalud.service.CitaServiceImpl</include>
+										<include>com.petsalud.backendpetsalud.service.MascotaServiceImpl</include>
 									</includes>
 									<limits>
 										<limit>
