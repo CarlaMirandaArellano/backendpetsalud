@@ -1,12 +1,17 @@
 package com.petsalud.backendpetsalud.security;
 
 import com.petsalud.backendpetsalud.controller.ProductoController;
+import com.petsalud.backendpetsalud.controller.ExpedienteMedicoController;
+import com.petsalud.backendpetsalud.controller.ProveedorController;
 import com.petsalud.backendpetsalud.controller.VentaController;
+import com.petsalud.backendpetsalud.entity.ExpedienteMedico;
 import com.petsalud.backendpetsalud.entity.Producto;
 import com.petsalud.backendpetsalud.entity.Rol;
 import com.petsalud.backendpetsalud.entity.Usuario;
 import com.petsalud.backendpetsalud.entity.Venta;
 import com.petsalud.backendpetsalud.service.ProductoService;
+import com.petsalud.backendpetsalud.service.ExpedienteMedicoService;
+import com.petsalud.backendpetsalud.service.ProveedorService;
 import com.petsalud.backendpetsalud.service.VentaService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,8 +24,10 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -31,7 +38,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Pruebas de acceso de punta a punta sobre la cadena de seguridad:
  * token JWT -> filtro -> reglas de SecurityConfig y @PreAuthorize -> 200 / 401 / 403.
  */
-@WebMvcTest({ProductoController.class, VentaController.class})
+@WebMvcTest({ProductoController.class, VentaController.class, ExpedienteMedicoController.class,
+        ProveedorController.class})
 @Import({SecurityConfig.class, JwtUtil.class, JwtAuthenticationFilter.class,
         JsonAuthenticationEntryPoint.class, JsonAccessDeniedHandler.class})
 @TestPropertySource(properties = {
@@ -56,10 +64,18 @@ class AutorizacionPorRolTest {
     private VentaService ventaService;
 
     @MockBean
+    private ExpedienteMedicoService expedienteMedicoService;
+
+    @MockBean
+    private ProveedorService proveedorService;
+
+    @MockBean
     private ResourceAccessGuard accessGuard;
 
     private static final String PRODUCTO_JSON =
             "{\"nombre\":\"Alimento\",\"precio\":1000,\"stock\":5,\"categoria\":\"Alimentos\"}";
+    private static final String PROVEEDOR_JSON =
+            "{\"nombre\":\"Proveedor Central\",\"rut\":\"12.345.678-9\",\"email\":\"contacto@proveedor.cl\"}";
 
     @BeforeEach
     void setUp() {
@@ -226,5 +242,51 @@ class AutorizacionPorRolTest {
 
         // Assert
         respuesta.andExpect(status().isForbidden());
+    }
+
+    @Test
+    void empleadoPuedeConsultarExpedienteMedico() throws Exception {
+        // Arrange
+        when(expedienteMedicoService.obtenerRegistroPorId(1L))
+                .thenReturn(Optional.of(ExpedienteMedico.builder().id(1L).build()));
+        var solicitud = get("/api/expedientes/1")
+                .header("Authorization", bearer("empleado@petsalud.cl"));
+
+        // Act
+        var respuesta = mockMvc.perform(solicitud);
+
+        // Assert
+        respuesta.andExpect(status().isOk());
+        verify(expedienteMedicoService).obtenerRegistroPorId(1L);
+    }
+
+    @Test
+    void clienteNoPuedeConsultarExpedienteMedico() throws Exception {
+        // Arrange
+        var solicitud = get("/api/expedientes/1")
+                .header("Authorization", bearer("cliente@petsalud.cl"));
+
+        // Act
+        var respuesta = mockMvc.perform(solicitud);
+
+        // Assert
+        respuesta.andExpect(status().isForbidden());
+        verifyNoInteractions(expedienteMedicoService);
+    }
+
+    @Test
+    void clienteNoPuedeCrearProveedores() throws Exception {
+        // Arrange
+        var solicitud = post("/api/proveedores")
+                .header("Authorization", bearer("cliente@petsalud.cl"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(PROVEEDOR_JSON);
+
+        // Act
+        var respuesta = mockMvc.perform(solicitud);
+
+        // Assert
+        respuesta.andExpect(status().isForbidden());
+        verifyNoInteractions(proveedorService);
     }
 }

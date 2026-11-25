@@ -28,6 +28,14 @@ public class ExpedienteMedicoServiceImpl implements ExpedienteMedicoService {
 
     @Override
     public ExpedienteMedico agregarRegistro(Long mascotaId, Long veterinarioId, ExpedienteMedico registro) {
+        if (registro == null
+                || !tieneTexto(registro.getDescripcion())
+                || !tieneTexto(registro.getDiagnostico())
+                || !tieneTexto(registro.getTratamiento())) {
+            throw new IllegalArgumentException(
+                    "El registro médico debe incluir descripción, diagnóstico y tratamiento");
+        }
+
         Mascota mascota = mascotaRepository.findById(mascotaId)
                 .orElseThrow(() -> new IllegalArgumentException("Mascota no encontrada"));
 
@@ -54,5 +62,9 @@ public class ExpedienteMedicoServiceImpl implements ExpedienteMedicoService {
     @Override
     public void eliminarRegistro(Long id) {
         expedienteMedicoRepository.deleteById(id);
+    }
+
+    private static boolean tieneTexto(String valor) {
+        return valor != null && !valor.isBlank();
     }
 }

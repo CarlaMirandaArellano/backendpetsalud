@@ -1,6 +1,8 @@
 package com.petsalud.backendpetsalud.service;
 
 import com.petsalud.backendpetsalud.entity.Mascota;
+import com.petsalud.backendpetsalud.entity.Cita;
+import com.petsalud.backendpetsalud.entity.ExpedienteMedico;
 import com.petsalud.backendpetsalud.entity.Rol;
 import com.petsalud.backendpetsalud.entity.Usuario;
 import com.petsalud.backendpetsalud.repository.MascotaRepository;
@@ -117,6 +119,46 @@ class MascotaServiceImplTest {
         assertEquals("Firulais", actualizada.getNombre());
         assertEquals("Quiltro", actualizada.getRaza());
         assertEquals("Macho", actualizada.getSexo());
+    }
+
+    @Test
+    @DisplayName("Al actualizar una mascota conserva sus citas asociadas")
+    void actualizaMascotaConservandoCitas() {
+        // Arrange
+        Mascota actual = Mascota.builder().id(10L).nombre("Firu").especie("Perro").build();
+        Cita cita = Cita.builder().id(20L).mascota(actual).build();
+        List<Cita> citas = List.of(cita);
+        actual.setCitas(citas);
+        Mascota cambios = Mascota.builder().nombre("Firulais").especie("Perro").build();
+        when(mascotaRepository.findById(10L)).thenReturn(Optional.of(actual));
+        when(mascotaRepository.save(actual)).thenReturn(actual);
+
+        // Act
+        Mascota actualizada = mascotaService.actualizarMascota(10L, cambios);
+
+        // Assert
+        assertSame(citas, actualizada.getCitas());
+        assertSame(actualizada, actualizada.getCitas().get(0).getMascota());
+    }
+
+    @Test
+    @DisplayName("Al actualizar una mascota conserva sus expedientes médicos asociados")
+    void actualizaMascotaConservandoExpedientesMedicos() {
+        // Arrange
+        Mascota actual = Mascota.builder().id(10L).nombre("Firu").especie("Perro").build();
+        ExpedienteMedico expediente = ExpedienteMedico.builder().id(30L).mascota(actual).build();
+        List<ExpedienteMedico> expedientes = List.of(expediente);
+        actual.setExpedientesMedicos(expedientes);
+        Mascota cambios = Mascota.builder().nombre("Firulais").especie("Perro").build();
+        when(mascotaRepository.findById(10L)).thenReturn(Optional.of(actual));
+        when(mascotaRepository.save(actual)).thenReturn(actual);
+
+        // Act
+        Mascota actualizada = mascotaService.actualizarMascota(10L, cambios);
+
+        // Assert
+        assertSame(expedientes, actualizada.getExpedientesMedicos());
+        assertSame(actualizada, actualizada.getExpedientesMedicos().get(0).getMascota());
     }
 
     @Test

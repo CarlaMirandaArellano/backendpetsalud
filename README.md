@@ -59,17 +59,22 @@ Para dar el rol EMPLEADO o GERENTE: `PUT /api/usuarios/{id}/rol` con `{"rol":"EM
 También se incluye la colección `PetSalud-JWT.postman_collection.json`: el login guarda el token automáticamente.
 
 ## Pruebas automatizadas
+Las pruebas usan H2 con alcance `test`; no necesitan una instancia MySQL ni las variables de entorno de ejecución.
+
 ```bash
 ./mvnw clean verify
 # En Windows: .\mvnw.cmd clean verify
 ```
+- `BackendpetsaludApplicationTests`: verifica el arranque completo de la aplicación con H2.
 - `JwtUtilTest`: claims, token alterado, otra clave, token expirado, `alg: none` y clave débil.
-- `AutorizacionPorRolTest`: acceso a productos y generación de ventas por rol.
+- `AutorizacionPorRolTest`: permisos por rol para productos, proveedores, expedientes y ventas.
 - `UsuarioServiceImplTest` y `VentaServiceImplTest`: validaciones, cálculos, stock y relaciones entre usuario, venta y productos.
+- `VentaServiceTransactionTest`: verifica rollback del stock ante un fallo durante una venta.
+- `ExpedienteMedicoServiceImplTest`: valida registros médicos completos y sus relaciones.
 - `ProveedorServiceImplTest`: datos obligatorios del proveedor, RUT duplicado, relación Producto–Proveedor y regla que impide eliminar un proveedor con productos.
 - `CitaServiceImplTest` (semana 5): cita agendada con estado inicial "Agendada", rechazo de horario ocupado, veterinario correcto (rol EMPLEADO) y mascota con propietario registrado.
 - `MascotaServiceImplTest`, `UsuarioTest` y `CitaTest` (semana 5): datos obligatorios del usuario, roles válidos, relación CLIENTE–mascotas y relaciones de la cita.
-- JUnit 5 y Mockito vienen incluidos con `spring-boot-starter-test`. JaCoCo genera el reporte en `target/site/jacoco/` y exige al menos 80% de cobertura de líneas en `UsuarioServiceImpl`, `VentaServiceImpl`, `ProveedorServiceImpl`, `CitaServiceImpl` y `MascotaServiceImpl`.
+- JUnit 5 y Mockito vienen incluidos con `spring-boot-starter-test`. JaCoCo genera el reporte en `target/site/jacoco/` y comprueba el mínimo de cobertura de líneas configurado para `UsuarioServiceImpl`, `VentaServiceImpl`, `ProveedorServiceImpl`, `CitaServiceImpl` y `MascotaServiceImpl`; la cobertura global se reporta como área de mejora, sin umbral obligatorio.
 
 ## Migración desde la versión anterior
 Los roles cambiaron de nombre. Si la base ya tiene usuarios:
